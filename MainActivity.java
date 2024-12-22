@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity {
         responseTextView = findViewById(R.id.responseTextView);
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://YOUR_BACKEND_URL") // Replace with your backend URL
+                .baseUrl("http://") 
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
