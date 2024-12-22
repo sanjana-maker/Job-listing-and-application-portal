@@ -1,0 +1,117 @@
+const express = require('express');
+const mysql = require('mysql');
+const bodyParser = require('body-parser');
+const axios = require('axios');
+require('dotenv').config();
+
+const app = express();
+const port = 3000;
+
+// Middleware
+app.use(bodyParser.json());
+
+// MySQL Connection
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'job_portal'
+});
+
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to MySQL:', err);
+    return;
+  }
+  console.log('Connected to MySQL database.');
+});
+
+// Routes
+
+// Admin Operations
+// Add a new job listing
+app.post('/api/admin/jobs', (req, res) => {
+  const { title, description, location, salary, contact_email } = req.body;
+  const query = 'INSERT INTO jobs (title, description, location, salary, contact_email) VALUES (?, ?, ?, ?, ?)';
+  db.query(query, [title, description, location, salary, contact_email], (err, result) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error adding job listing.');
+    } else {
+      res.status(201).send('Job listing added successfully.');
+    }
+  });
+});
+
+// List all job listings
+app.get('/api/admin/jobs', (req, res) => {
+  const query = 'SELECT * FROM jobs';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error fetching job listings.');
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+// Candidate Operations
+// Fetch available job listings
+app.get('/api/candidate/jobs', (req, res) => {
+  const { location } = req.query;
+  const query = location
+    ? 'SELECT * FROM jobs WHERE location = ?'
+    : 'SELECT * FROM jobs';
+  db.query(query, location ? [location] : [], (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error fetching job listings.');
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+// Apply for a job
+app.post('/api/candidate/applications', (req, res) => {
+  const { candidate_name, contact, job_id } = req.body;
+  const query = 'INSERT INTO applications (job_id, candidate_name, contact) VALUES (?, ?, ?)';
+  db.query(query, [job_id, candidate_name, contact], (err, result) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error submitting application.');
+    } else {
+      res.status(201).send('Application submitted successfully.');
+    }
+  });
+});
+
+// ChatGPT Integration
+app.post('/api/chat', async (req, res) => {
+  const { query } = req.body;
+  try {
+    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: query }]
+    }, {
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    res.status(200).json({ response: response.data.choices[0].message.content });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error communicating with ChatGPT API.');
+  }
+});
+
+// Start Server
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
+
+// Export for testing (optional)
+module.exports = app;
