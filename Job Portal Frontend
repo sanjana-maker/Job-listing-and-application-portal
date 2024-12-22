@@ -1,0 +1,125 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import './App.css';
+
+function App() {
+  const [jobs, setJobs] = useState([]);
+  const [newJob, setNewJob] = useState({
+    title: '',
+    description: '',
+    location: '',
+    salary: '',
+    contact_email: ''
+  });
+
+  const fetchJobs = async () => {
+    try {
+      const response = await axios.get('/api/admin/jobs');
+      setJobs(response.data);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewJob({ ...newJob, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('/api/admin/jobs', newJob);
+      setNewJob({ title: '', description: '', location: '', salary: '', contact_email: '' });
+      fetchJobs();
+    } catch (error) {
+      console.error('Error adding job:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  return (
+    <div className="App">
+      <h1>Admin Panel</h1>
+
+      {/* Form to Add New Job */}
+      <form onSubmit={handleSubmit} className="job-form">
+        <h2>Add Job</h2>
+        <input
+          type="text"
+          name="title"
+          placeholder="Job Title"
+          value={newJob.title}
+          onChange={handleInputChange}
+          required
+        />
+        <textarea
+          name="description"
+          placeholder="Job Description"
+          value={newJob.description}
+          onChange={handleInputChange}
+          required
+        ></textarea>
+        <input
+          type="text"
+          name="location"
+          placeholder="Location"
+          value={newJob.location}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="number"
+          name="salary"
+          placeholder="Salary"
+          value={newJob.salary}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="email"
+          name="contact_email"
+          placeholder="Contact Email"
+          value={newJob.contact_email}
+          onChange={handleInputChange}
+          required
+        />
+        <button type="submit">Add Job</button>
+      </form>
+
+      {/* Job Listings Table */}
+      <div className="job-list">
+        <h2>Job Listings</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Location</th>
+              <th>Salary</th>
+              <th>Contact Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            {jobs.map((job) => (
+              <tr key={job.id}>
+                <td>{job.id}</td>
+                <td>{job.title}</td>
+                <td>{job.description}</td>
+                <td>{job.location}</td>
+                <td>{job.salary}</td>
+                <td>{job.contact_email}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export default App;
