@@ -1,0 +1,24 @@
+
+CREATE DATABASE job_portal;
+
+
+USE job_portal;
+
+
+CREATE TABLE jobs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    location VARCHAR(100) NOT NULL,
+    salary DECIMAL(10, 2) NOT NULL,
+    contact_email VARCHAR(255) NOT NULL
+);
+
+
+CREATE TABLE applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    job_id INT NOT NULL,
+    candidate_name VARCHAR(255) NOT NULL,
+    contact VARCHAR(50) NOT NULL,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+);
